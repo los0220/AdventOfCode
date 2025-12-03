@@ -1,2 +1,5 @@
+CC = gcc
+CFLAGS = -std=c99 -Wall -Wextra -O2
+
 part1: part1.c
-	gcc part1.c -std=c99 -Wall -o part1
+	$(CC) $(CFLAGS) $^ -o $@

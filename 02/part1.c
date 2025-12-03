@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <string.h>
+#include <stdbool.h>
 
 int isInvalid(long value);
 int readRange(FILE* fptr, long* lower, long* upper);
@@ -6,10 +8,27 @@ int readRange(FILE* fptr, long* lower, long* upper);
 
 int main(int argc, char **argv)
 {
-	if (argc != 2)
-		return -1;	
+	bool verbose = false;
+	char VERBOSE_FLAG[] = "-v";
+	char* fileName = NULL;
 
-	FILE* fptr = fopen(argv[1], "r");
+	if (argc == 2)
+	{
+		fileName = argv[1];
+	}
+	else if (argc == 3)
+	{
+		fileName = argv[2];
+
+		if (strcmp(argv[1], VERBOSE_FLAG) == 0)
+			verbose = true;
+	}
+	else
+	{
+		return -1;	
+	}
+
+	FILE* fptr = fopen(fileName, "r");
 
 	long first, last, i;
 	long sum = 0;
@@ -18,21 +37,23 @@ int main(int argc, char **argv)
 	{
 		if (readRange(fptr, &first, &last) <= 0)
 			break;
-			
-		printf("%ld - %ld", first, last);
 
-		for(i = first; i <= last; i++)
+		if (verbose)
+			printf("%ld - %ld:", first, last);
+
+		for (i = first; i <= last; i++)
 		{
 			if (isInvalid(i) == 1)
 			{
-				printf(" %ld", i);
 				sum += i;
+				if (verbose)
+					printf(" %ld", i);
 			}
 		} 
 
-		printf("\n");
+		if (verbose)
+			printf("\n");
 	}
-
 
 	fclose(fptr);
 
@@ -93,7 +114,6 @@ int readRange(FILE* fptr, long* first, long* last)
 			break;
 		}
 	}
-	
+
 	return count;
 }
-
