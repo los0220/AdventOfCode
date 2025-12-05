@@ -2,8 +2,15 @@
 #include <fstream>
 #include <string>
 
+struct Battery 
+{
+	char joltage;
+	size_t pos;
+};
+
 int part1(std::ifstream &f, bool verbose);
-int getMaxJoltage(std::string const& str);
+long getMaxJoltage(std::string const& str, int nBatteries);
+Battery findBestBattery(std::string const& str, size_t start, size_t end);
 size_t findChar(std::string const& str, char c, size_t start, size_t end);
 
 int main(int argc, char* argv[])
@@ -41,13 +48,14 @@ int main(int argc, char* argv[])
 
 int part1(std::ifstream &f, bool verbose)
 {
+	const int N_ACTIVE_BATTERIES = 2;
 	std::string str;
-	int joltage = 0;
-	int joltageSum = 0;
+	long joltage = 0;
+	long joltageSum = 0;
 
 	while (std::getline(f, str))
 	{
-		joltage = getMaxJoltage(str);
+		joltage = getMaxJoltage(str, N_ACTIVE_BATTERIES);
 		joltageSum += joltage;
 
 		if (verbose)
@@ -61,35 +69,35 @@ int part1(std::ifstream &f, bool verbose)
 	return joltageSum;
 }
 
-int getMaxJoltage(std::string const& str)
+long getMaxJoltage(std::string const& str, int nBateries)
 {
-	int maxJoltage = 0;
-	char c1 = '9';
-	size_t c1_pos = std::string::npos;
-	char c2 = '9';
-	size_t c2_pos = std::string::npos;
+	long maxJoltage = 0;
+	Battery bat;
+	bat.pos = 0;
 
-	for (; c1 >= '1'; c1--)
+	for (int i = nBateries-1; i >= 0; i--)
 	{
-		c1_pos = findChar(str, c1, 0, str.length() - 1);
-		if (c1_pos != std::string::npos)
-		{
-			maxJoltage += (int)(c1 - '0') * 10;
-			break;
-		}
-	}
-
-	for (; c2 >= '1'; c2--)
-	{
-		c2_pos = findChar(str, c2, c1_pos + 1, str.length());
-		if (c2_pos != std::string::npos)
-		{
-			maxJoltage += (int)(c2 - '0');
-			break;
-		}
+		bat = findBestBattery(str, bat.pos, str.length()-i);
+		maxJoltage *= 10;
+		maxJoltage += (long)(bat.joltage - '0');
+		bat.pos++;
 	}
 
 	return maxJoltage;
+}
+
+Battery findBestBattery(std::string const& str, size_t start, size_t end)
+{
+	Battery bat;
+
+	for (bat.joltage = '9'; bat.joltage >= '1'; bat.joltage--)
+	{
+		bat.pos = findChar(str, bat.joltage, start, end);
+		if (bat.pos != std::string::npos)
+			return bat;
+	}
+
+	return bat;
 }
 
 size_t findChar(std::string const& str, char c, size_t start, size_t end)
