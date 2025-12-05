@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <chrono>
 
 struct Battery 
 {
@@ -9,8 +10,8 @@ struct Battery
 };
 
 int part2(std::ifstream &f, bool verbose);
-long getMaxJoltage(std::string const& str, int nBatteries);
-Battery findBestBattery(std::string const& str, size_t start, size_t end);
+long getMaxJoltage(std::string const& bank, int nBatteries);
+Battery findMaxBattery(std::string const& bank, size_t start, size_t end);
 size_t findChar(std::string const& str, char c, size_t start, size_t end);
 
 int main(int argc, char* argv[])
@@ -18,6 +19,7 @@ int main(int argc, char* argv[])
 	const std::string VERBOSE_FLAG = "-v";
 	char* fileName = nullptr;
 	bool verbose = false;
+
 
 	if (argc == 2)
 	{
@@ -33,6 +35,7 @@ int main(int argc, char* argv[])
 		return -1;
 	}
 
+	auto start = std::chrono::high_resolution_clock::now();
 
 	std::ifstream f(fileName);
 
@@ -42,6 +45,11 @@ int main(int argc, char* argv[])
 	part2(f, verbose);
 
 	f.close();
+
+	auto stop = std::chrono::high_resolution_clock::now();
+	auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+
+	std::cout << "Time taken: " << duration.count() << " μs \n";
 		
 	return 0;
 }
@@ -49,19 +57,17 @@ int main(int argc, char* argv[])
 int part2(std::ifstream &f, bool verbose)
 {
 	const int N_ACTIVE_BATTERIES = 12;
-	std::string str;
+	std::string bank;
 	long joltage = 0;
 	long joltageSum = 0;
 
-	while (std::getline(f, str))
+	while (std::getline(f, bank))
 	{
-		joltage = getMaxJoltage(str, N_ACTIVE_BATTERIES);
+		joltage = getMaxJoltage(bank, N_ACTIVE_BATTERIES);
 		joltageSum += joltage;
 
 		if (verbose)
-		{
 			std::cout << joltage << "\n";
-		}
 	}
 
 	std::cout << joltageSum << "\n";
@@ -69,7 +75,7 @@ int part2(std::ifstream &f, bool verbose)
 	return joltageSum;
 }
 
-long getMaxJoltage(std::string const& str, int nBateries)
+long getMaxJoltage(std::string const& bank, const int nBateries)
 {
 	long maxJoltage = 0;
 	Battery bat;
@@ -77,7 +83,7 @@ long getMaxJoltage(std::string const& str, int nBateries)
 
 	for (int i = nBateries-1; i >= 0; i--)
 	{
-		bat = findBestBattery(str, bat.pos, str.length()-i);
+		bat = findMaxBattery(bank, bat.pos, bank.length()-i);
 		maxJoltage *= 10;
 		maxJoltage += (long)(bat.joltage - '0');
 		bat.pos++;
@@ -86,27 +92,26 @@ long getMaxJoltage(std::string const& str, int nBateries)
 	return maxJoltage;
 }
 
-Battery findBestBattery(std::string const& str, size_t start, size_t end)
+Battery findMaxBattery(std::string const& bank, size_t start, size_t end)
 {
 	Battery bat;
-
-	for (bat.joltage = '9'; bat.joltage >= '1'; bat.joltage--)
+	bat.joltage = '0';
+	bat.pos = std::string::npos;
+	
+	for (size_t i = start; i < end; i++)
 	{
-		bat.pos = findChar(str, bat.joltage, start, end);
-		if (bat.pos != std::string::npos)
+		if (bank[i] == '9')
+		{
+			bat.joltage = '9';
+			bat.pos = i;
 			return bat;
+		}
+		else if (bank[i] > bat.joltage)
+		{
+			bat.joltage = bank[i];
+			bat.pos = i;
+		}
 	}
 
 	return bat;
-}
-
-size_t findChar(std::string const& str, char c, size_t start, size_t end)
-{
-	for (size_t i = start; i < end; i++)
-	{
-		if (str[i] == c) 
-			return i;
-	}
-
-	return std::string::npos;
 }
