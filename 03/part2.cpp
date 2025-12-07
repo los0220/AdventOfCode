@@ -16,10 +16,9 @@ size_t findChar(std::string const& str, char c, size_t start, size_t end);
 
 int main(int argc, char* argv[])
 {
-	const std::string VERBOSE_FLAG = "-v";
-	char* fileName = nullptr;
-	bool verbose = false;
-
+	const std::string VERBOSE_FLAG { "-v" };
+	char* fileName { nullptr };
+	bool verbose { false };
 
 	if (argc == 2)
 	{
@@ -56,10 +55,10 @@ int main(int argc, char* argv[])
 
 int part2(std::ifstream &f, bool verbose)
 {
-	const int N_ACTIVE_BATTERIES = 12;
-	std::string bank;
-	long joltage = 0;
-	long joltageSum = 0;
+	const int N_ACTIVE_BATTERIES { 12 };
+	std::string bank {};
+	long joltage { 0 };
+	long joltageSum { 0 };
 
 	while (std::getline(f, bank))
 	{
@@ -77,16 +76,15 @@ int part2(std::ifstream &f, bool verbose)
 
 long getMaxJoltage(std::string const& bank, const int nBateries)
 {
-	long maxJoltage = 0;
-	Battery bat;
-	bat.pos = 0;
+	long maxJoltage { 0 };
+	Battery bat { '0', 0 };
 
-	for (int i = nBateries-1; i >= 0; i--)
+	for (int i = nBateries - 1; i >= 0; --i)
 	{
-		bat = findMaxBattery(bank, bat.pos, bank.length()-i);
+		bat = findMaxBattery(bank, bat.pos, bank.length() - i);
 		maxJoltage *= 10;
 		maxJoltage += (long)(bat.joltage - '0');
-		bat.pos++;
+		++bat.pos;
 	}
 
 	return maxJoltage;
@@ -94,23 +92,17 @@ long getMaxJoltage(std::string const& bank, const int nBateries)
 
 Battery findMaxBattery(std::string const& bank, size_t start, size_t end)
 {
-	Battery bat;
-	bat.joltage = '0';
-	bat.pos = std::string::npos;
+	Battery bat { '0', std::string::npos };
 	
-	for (size_t i = start; i < end; i++)
+	for (size_t i = start; i < end; ++i)
 	{
-		if (bank[i] == '9')
-		{
-			bat.joltage = '9';
-			bat.pos = i;
-			return bat;
-		}
-		else if (bank[i] > bat.joltage)
+		if (bank[i] > bat.joltage)
 		{
 			bat.joltage = bank[i];
 			bat.pos = i;
 		}
+		if (bat.joltage == '9')
+			return bat;
 	}
 
 	return bat;
