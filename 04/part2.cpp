@@ -45,7 +45,10 @@ int solve(std::string const& fileName, bool verbose)
 	size_t xLim {0};
 		
 	if (!f.is_open())
+	{
+		std::cerr << "Can't open " << fileName << "\n";
 		return -1;
+	}
 	
 	while (std::getline(f, s))
 	{
@@ -92,15 +95,15 @@ int removeAccesibleRolls(std::vector<std::string> &grid, bool verbose)
 int getAdjacentRolls(std::vector<std::string> const& grid, size_t y, size_t x)
 {
 	int adjacent { 0 };
-	static constexpr int ZERO_EMPTY_SPACES { 8*(int)'.' };
-	static constexpr int NORMALIZE { (int)('@' - '.') };
+	static constexpr int NORMALIZE_SUBTRACT { 8 * static_cast<int>('.') };
+	static constexpr int NORMALIZE_DEVIDE   { static_cast<int>('@' - '.') };
 
 	adjacent += (int)grid[y-1][x-1] + (int)grid[y][x-1] + (int)grid[y+1][x-1];
 	adjacent += (int)grid[y-1][ x ]                     + (int)grid[y+1][ x ];
 	adjacent += (int)grid[y-1][x+1] + (int)grid[y][x+1] + (int)grid[y+1][x+1];
 
-	adjacent -= ZERO_EMPTY_SPACES;
-	adjacent /= NORMALIZE;
+	adjacent -= NORMALIZE_SUBTRACT;
+	adjacent /= NORMALIZE_DEVIDE;
 	
 	return adjacent;
 }
