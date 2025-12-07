@@ -2,10 +2,10 @@ CXX = g++
 CXXFLAGS = -std=c++11 -Wall -Wextra -O2 -pedantic
 
 .PHONY: all
-all: part1 part2
+all: part1.bin part2.bin
 
-part1: part1.cpp
+part1.bin: part1.cpp
 	$(CXX) $(CXXFLAGS) $^ -o $@
 
-part2: part2.cpp
+part2.bin: part2.cpp
 	$(CXX) $(CXXFLAGS) $^ -o $@
