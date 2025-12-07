@@ -89,12 +89,15 @@ int getAccesibleRolls(std::vector<std::string> const& grid)
 int getAdjacentRolls(std::vector<std::string> const& grid, size_t y, size_t x)
 {
 	int adjacent { 0 };
+	static constexpr int ZERO_EMPTY_SPACES { (int)'@' + (int)8*'.' };
+	static constexpr int NORMALIZE { (int)('@' - '.') };
 
-	for (size_t i = x-1; i <= x+1; ++i)
-		adjacent += (int)grid[y-1][i] + (int)grid[y][i] + (int)grid[y+1][i];
+	adjacent += (int)grid[y-1][x-1] + (int)grid[y][x-1] + (int)grid[y+1][x-1];
+	adjacent += (int)grid[y-1][ x ] + (int)grid[y][ x ] + (int)grid[y+1][ x ];
+	adjacent += (int)grid[y-1][x+1] + (int)grid[y][x+1] + (int)grid[y+1][x+1];
 
-	adjacent -= (int)'@' + (int)8*'.';
-	adjacent /= (int)('@' - '.');
-
+	adjacent -= ZERO_EMPTY_SPACES;
+	adjacent /= NORMALIZE;
+	
 	return adjacent;
 }
