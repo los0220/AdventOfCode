@@ -43,8 +43,6 @@ int solve(std::string const& fileName, bool verbose)
 	std::string s {};
 	std::vector<std::string> grid {{}};
 	size_t xLim {0};
-	// int removedRolls {0};
-	// int totalRemovedRolls {0};
 		
 	if (!f.is_open())
 		return -1;
@@ -65,9 +63,6 @@ int solve(std::string const& fileName, bool verbose)
 
 	f.close();
 
-	// while ((removedRolls = removeAccesibleRolls(grid)) != 0)
-		// totalRemovedRolls += removedRolls;
-		
 	std::cout << removeAccesibleRolls(grid, verbose) << "\n";
 
 	return 0;	
@@ -97,11 +92,11 @@ int removeAccesibleRolls(std::vector<std::string> &grid, bool verbose)
 int getAdjacentRolls(std::vector<std::string> const& grid, size_t y, size_t x)
 {
 	int adjacent { 0 };
-	static constexpr int ZERO_EMPTY_SPACES { (int)'@' + (int)8*'.' };
+	static constexpr int ZERO_EMPTY_SPACES { 8*(int)'.' };
 	static constexpr int NORMALIZE { (int)('@' - '.') };
 
 	adjacent += (int)grid[y-1][x-1] + (int)grid[y][x-1] + (int)grid[y+1][x-1];
-	adjacent += (int)grid[y-1][ x ] + (int)grid[y][ x ] + (int)grid[y+1][ x ];
+	adjacent += (int)grid[y-1][ x ]                     + (int)grid[y+1][ x ];
 	adjacent += (int)grid[y-1][x+1] + (int)grid[y][x+1] + (int)grid[y+1][x+1];
 
 	adjacent -= ZERO_EMPTY_SPACES;
@@ -119,8 +114,9 @@ int remove(std::vector<std::string> &grid, size_t y, size_t x)
 
 	grid[y][x] = '.';
 
-	for (size_t i = x-1; i <= x+1; ++i)
-		removed += remove(grid, y-1, i) + remove(grid, y, i) + remove(grid, y+1, i);
+	removed += remove(grid, y-1, x+1) + remove(grid, y, x+1) + remove(grid, y+1, x+1);
+	removed += remove(grid, y-1,  x )                  		 + remove(grid, y+1,  x );
+	removed += remove(grid, y-1, x-1) + remove(grid, y, x-1) + remove(grid, y+1, x-1);
 
 	return removed;
 }
