@@ -5,8 +5,9 @@
 #include <chrono>
 
 int solve(std::string const& fileName, bool verbose);
-int removeAccesibleRolls(std::vector<std::string> &grid);
+int removeAccesibleRolls(std::vector<std::string> &grid, bool verbose);
 int getAdjacentRolls(std::vector<std::string> const& grid, size_t y, size_t x);
+int remove(std::vector<std::string> &grid, size_t y, size_t x);
 
 int main(int argc, char* argv[])
 {
@@ -42,8 +43,8 @@ int solve(std::string const& fileName, bool verbose)
 	std::string s {};
 	std::vector<std::string> grid {{}};
 	size_t xLim {0};
-	int removedRolls {0};
-	int totalRemovedRolls {0};
+	// int removedRolls {0};
+	// int totalRemovedRolls {0};
 		
 	if (!f.is_open())
 		return -1;
@@ -64,33 +65,33 @@ int solve(std::string const& fileName, bool verbose)
 
 	f.close();
 
-	while ((removedRolls = removeAccesibleRolls(grid)) != 0)
-		totalRemovedRolls += removedRolls; 
+	// while ((removedRolls = removeAccesibleRolls(grid)) != 0)
+		// totalRemovedRolls += removedRolls;
 		
-	std::cout << totalRemovedRolls << "\n";
+	std::cout << removeAccesibleRolls(grid, verbose) << "\n";
 
 	return 0;	
 }
 
-int removeAccesibleRolls(std::vector<std::string> &grid)
+int removeAccesibleRolls(std::vector<std::string> &grid, bool verbose)
 {
-	int accesible { 0 };
+	int removed { 0 };
 	size_t yLim { grid.size() - 1 };
 	size_t xLim { grid[0].size() - 1 };
 	
 	for (size_t y = 1; y < yLim; ++y)
 	{
 		for(size_t x = 1; x < xLim; ++x)
-		{
-			if (grid[y][x] == '@' && getAdjacentRolls(grid, y, x) < 4)
-			{
-				++accesible;
-				grid[y][x] = '.';
-			}
-		}
+			removed += remove(grid, y, x);
+	}
+
+	if (verbose)
+	{
+		for (auto& s : grid)
+			std::cout << s << "\n";
 	}
 	
-	return accesible;	
+	return removed;	
 }
 
 int getAdjacentRolls(std::vector<std::string> const& grid, size_t y, size_t x)
@@ -107,4 +108,19 @@ int getAdjacentRolls(std::vector<std::string> const& grid, size_t y, size_t x)
 	adjacent /= NORMALIZE;
 	
 	return adjacent;
+}
+
+int remove(std::vector<std::string> &grid, size_t y, size_t x)
+{
+	int removed { 1 };
+
+	if (grid[y][x] == '.' || getAdjacentRolls(grid, y, x) >= 4)
+		return 0;
+
+	grid[y][x] = '.';
+
+	for (size_t i = x-1; i <= x+1; ++i)
+		removed += remove(grid, y-1, i) + remove(grid, y, i) + remove(grid, y+1, i);
+
+	return removed;
 }
