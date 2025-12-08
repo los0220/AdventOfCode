@@ -1,15 +1,18 @@
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <sstream>
-#include <vector>
 #include <chrono>
+#include <fstream>
+#include <iostream>
+#include <set>
+#include <sstream>
+#include <stdint.h>
+#include <string>
+#include <vector>
+
 
 int solve(std::string const& fileName, bool verbose);
-int countFresh(
-	std::vector<long> const& freshRangeStart, 
-	std::vector<long> const& freshRangeEnd, 
-	std::vector<long> const& availableIDs
+int countAvailableFresh(
+	std::vector<int64_t> const& freshRangeStart, 
+	std::vector<int64_t> const& freshRangeEnd, 
+	std::vector<int64_t> const& availableIDs
 );
 
 int main(int argc, char* argv[])
@@ -43,9 +46,9 @@ int main(int argc, char* argv[])
 int solve(std::string const& fileName, bool verbose)
 {	
 	std::ifstream f(fileName);
-	std::vector<long> freshRangeStart {};
-	std::vector<long> freshRangeEnd	{};
-	std::vector<long> availableIDs {};	
+	std::vector<int64_t> freshRangeStart {};
+	std::vector<int64_t> freshRangeEnd	{};
+	std::vector<int64_t> availableIDs {};	
 
 		
 	if (!f.is_open())
@@ -57,8 +60,8 @@ int solve(std::string const& fileName, bool verbose)
 	std::string s {};
 	while (std::getline(f, s))
 	{
-		long first { 0 };
-		long second { 0 }; 
+		int64_t first { 0 };
+		int64_t second { 0 }; 
 		char dash { '\0' };
 	
 		std::istringstream iss(s);
@@ -83,21 +86,21 @@ int solve(std::string const& fileName, bool verbose)
 		}
 	}
 
-	std::cout << countFresh(freshRangeStart, freshRangeEnd, availableIDs) << "\n";
+	std::cout << countAvailableFresh(freshRangeStart, freshRangeEnd, availableIDs) << "\n";
 	
 	f.close();
 
 	return 0;	
 }
 
-int countFresh(
-	std::vector<long> const& freshRangeStart,
-	std::vector<long> const& freshRangeEnd, 
-	std::vector<long> const& availableIDs
+int countAvailableFresh(
+	std::vector<int64_t> const& freshRangeStart,
+	std::vector<int64_t> const& freshRangeEnd, 
+	std::vector<int64_t> const& availableIDs
 ) {
 	int freshCount {0};
 
-	for (long id : availableIDs)
+	for (int64_t id : availableIDs)
 	{
 		for(size_t i = 0; i < freshRangeStart.size(); ++i)
 		{
