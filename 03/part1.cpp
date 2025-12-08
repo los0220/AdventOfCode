@@ -1,7 +1,8 @@
-#include <iostream>
-#include <fstream>
-#include <string>
 #include <chrono>
+#include <fstream>
+#include <iostream>
+#include <string>
+#include <stdint.h>
 
 struct Battery 
 {
@@ -10,7 +11,7 @@ struct Battery
 };
 
 int part2(std::ifstream &f, bool verbose);
-long getMaxJoltage(std::string const& bank, int nBatteries);
+int64_t getMaxJoltage(std::string const& bank, int nBatteries);
 Battery findMaxBattery(std::string const& bank, size_t start, size_t end);
 size_t findChar(std::string const& str, char c, size_t start, size_t end);
 
@@ -57,8 +58,8 @@ int part2(std::ifstream &f, bool verbose)
 {
 	const int N_ACTIVE_BATTERIES { 2 };
 	std::string bank {};
-	long joltage { 0 };
-	long joltageSum { 0 };
+	int64_t joltage { 0 };
+	int64_t joltageSum { 0 };
 
 	while (std::getline(f, bank))
 	{
@@ -74,16 +75,16 @@ int part2(std::ifstream &f, bool verbose)
 	return joltageSum;
 }
 
-long getMaxJoltage(std::string const& bank, const int nBateries)
+int64_t getMaxJoltage(std::string const& bank, const int nBateries)
 {
-	long maxJoltage { 0 };
+	int64_t maxJoltage { 0 };
 	Battery bat { '0', 0 };
 
 	for (int i = nBateries - 1; i >= 0; --i)
 	{
 		bat = findMaxBattery(bank, bat.pos, bank.length() - i);
 		maxJoltage *= 10;
-		maxJoltage += (long)(bat.joltage - '0');
+		maxJoltage += static_cast<int64_t>(bat.joltage - '0');
 		++bat.pos;
 	}
 

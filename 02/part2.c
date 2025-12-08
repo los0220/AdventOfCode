@@ -1,6 +1,7 @@
+#include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
-#include <stdbool.h>
 
 typedef enum {
 	TRUE = 1,
@@ -8,10 +9,10 @@ typedef enum {
 	ERR = -1
 } ret_t;
 
-ret_t isInvalid(long value);
+ret_t isInvalid(int64_t value);
 bool isSequenceRepeating(const char* str, int strLen, int seqLen);
 bool isCharRepeating(const char* str, int strLen, int seqLen, int posInSeq);
-int readRange(FILE* fptr, long* lower, long* upper);
+int readRange(FILE* fptr, int64_t* lower, int64_t* upper);
 
 
 int main(int argc, char **argv)
@@ -38,8 +39,8 @@ int main(int argc, char **argv)
 
 	FILE* fptr = fopen(fileName, "r");
 
-	long first, last, i;
-	long sum = 0;
+	int64_t first, last, i;
+	int64_t sum = 0;
 	
 	while (fptr != NULL && !feof(fptr) )
 	{
@@ -70,7 +71,7 @@ int main(int argc, char **argv)
 	return 0;
 }
 
-ret_t isInvalid(long value)
+ret_t isInvalid(int64_t value)
 {
 	const int BUFFER_SIZE = 32;
 	char str[BUFFER_SIZE];
@@ -115,12 +116,12 @@ bool isCharRepeating(const char* str, int strLen, int seqLen, int posInSeq)
 	return true;
 }
 
-int readRange(FILE* fptr, long* first, long* last)
+int readRange(FILE* fptr, int64_t* first, int64_t* last)
 {
 	const char VALUES_SEPARATOR = '-';
 
 	int count = 0;
-	long* value = first;
+	int64_t* value = first;
 	char c;
 
 	*first = 0;
@@ -131,7 +132,7 @@ int readRange(FILE* fptr, long* first, long* last)
 		if ('0' <= c && c <= '9')
 		{
 			*value *= 10;
-			*value += (long)(c - '0');
+			*value += (int64_t)(c - '0');
 
 			count++;
 		}
