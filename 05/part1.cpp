@@ -93,13 +93,13 @@ int solve(std::string const& fileName, bool verbose)
         }
     }
 
+    f.close();
+
     std::sort(freshRanges.begin(), freshRanges.end());
     std::sort(availableIDs.begin(), availableIDs.end());
     
     result = countAvailableFresh(freshRanges, availableIDs);
     std::cout << result << "\n";
-    
-    f.close();
 
     return 0;	
 }

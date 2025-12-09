@@ -79,10 +79,10 @@ int solve(std::string const& fileName, bool verbose)
         freshRanges.push_back(Range{first, second});
     }
 
+    f.close();
+    
     result = countIDsInRanges(freshRanges);
     std::cout << result << "\n";
-    
-    f.close();
 
     return 0;	
 }
