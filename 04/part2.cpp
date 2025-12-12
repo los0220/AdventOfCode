@@ -11,115 +11,114 @@ int remove(std::vector<std::string> &grid, size_t y, size_t x);
 
 int main(int argc, char* argv[])
 {
-	const std::string VERBOSE_FLAG { "-v" };
-	std::string fileName {};
-	bool verbose { false };
+    const std::string VERBOSE_FLAG { "-v" };
+    std::string fileName {};
+    bool verbose { false };
 
-	if (argc == 3 && argv[1] == VERBOSE_FLAG)
-	{
-		fileName = argv[2];
-		verbose = true;
-	}
-	else if (argc == 2)
-		fileName = argv[1];
-	else
-		return -1;
+    if (argc == 3 && argv[1] == VERBOSE_FLAG)
+    {
+        fileName = argv[2];
+        verbose = true;
+    }
+    else if (argc == 2)
+        fileName = argv[1];
+    else
+        return -1;
 
-	auto start = std::chrono::high_resolution_clock::now();
+    auto start = std::chrono::high_resolution_clock::now();
 
-	solve(fileName, verbose);
+    solve(fileName, verbose);
 
-	auto stop = std::chrono::high_resolution_clock::now();
-	auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+    auto stop = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
 
-	std::cout << "Time taken: " << duration.count() << " μs \n";
-		
-	return 0;
+    std::cout << "Time taken: " << duration.count() << " μs \n";
+
+    return 0;
 }
 
 int solve(std::string const& fileName, bool verbose)
-{	
-	std::ifstream f(fileName);
-	std::string s {};
-	std::vector<std::string> grid {{}};
-	size_t xLim {0};
-		
-	if (!f.is_open())
-	{
-		std::cerr << "Can't open " << fileName << "\n";
-		return -1;
-	}
-	
-	while (std::getline(f, s))
-	{
-		if (verbose)
-			std::cout << s << "\n";
+{
+    std::ifstream f(fileName);
+    std::string s {};
+    std::vector<std::string> grid {{}};
+    size_t xLim {0};
 
-		grid.push_back(std::string("." + s + "."));			
-	}
+    if (!f.is_open())
+    {
+        std::cerr << "Can't open " << fileName << "\n";
+        return -1;
+    }
 
-	xLim = grid[1].size();
-	grid[0].resize(xLim, '.');
-	grid.push_back(std::string(xLim, '.'));
+    while (std::getline(f, s))
+    {
+        if (verbose)
+            std::cout << s << "\n";
 
-	// maybe implement len check for every row?	
+        grid.push_back(std::string("." + s + "."));
+    }
+    // maybe implement len check for every row?
 
-	f.close();
+    f.close();
 
-	std::cout << removeAccesibleRolls(grid, verbose) << "\n";
+    xLim = grid[1].size();
+    grid[0].resize(xLim, '.');
+    grid.push_back(std::string(xLim, '.'));
 
-	return 0;	
+    std::cout << removeAccesibleRolls(grid, verbose) << "\n";
+
+    return 0;
 }
 
 int removeAccesibleRolls(std::vector<std::string> &grid, bool verbose)
 {
-	int removed { 0 };
-	size_t yLim { grid.size() - 1 };
-	size_t xLim { grid[0].size() - 1 };
-	
-	for (size_t y = 1; y < yLim; ++y)
-	{
-		for(size_t x = 1; x < xLim; ++x)
-			removed += remove(grid, y, x);
-	}
+    int removed { 0 };
+    size_t yLim { grid.size() - 1 };
+    size_t xLim { grid[0].size() - 1 };
 
-	if (verbose)
-	{
-		for (auto& s : grid)
-			std::cout << s << "\n";
-	}
-	
-	return removed;	
+    for (size_t y = 1; y < yLim; ++y)
+    {
+        for(size_t x = 1; x < xLim; ++x)
+            removed += remove(grid, y, x);
+    }
+
+    if (verbose)
+    {
+        for (auto& s : grid)
+            std::cout << s << "\n";
+    }
+
+    return removed;
 }
 
 int getAdjacentRolls(std::vector<std::string> const& grid, size_t y, size_t x)
 {
-	int adjacent { 0 };
-	static constexpr int NORMALIZE_SUBTRACT { 8 * static_cast<int>('.') };
-	static constexpr int NORMALIZE_DEVIDE   { static_cast<int>('@' - '.') };
+    int adjacent { 0 };
+    static constexpr int NORMALIZE_SUBTRACT { 8 * static_cast<int>('.') };
+    static constexpr int NORMALIZE_DEVIDE   { static_cast<int>('@' - '.') };
 
-	adjacent += (int)grid[y-1][x-1] + (int)grid[y][x-1] + (int)grid[y+1][x-1];
-	adjacent += (int)grid[y-1][ x ]                     + (int)grid[y+1][ x ];
-	adjacent += (int)grid[y-1][x+1] + (int)grid[y][x+1] + (int)grid[y+1][x+1];
+    adjacent += (int)grid[y-1][x-1] + (int)grid[y][x-1] + (int)grid[y+1][x-1];
+    adjacent += (int)grid[y-1][ x ]                     + (int)grid[y+1][ x ];
+    adjacent += (int)grid[y-1][x+1] + (int)grid[y][x+1] + (int)grid[y+1][x+1];
 
-	adjacent -= NORMALIZE_SUBTRACT;
-	adjacent /= NORMALIZE_DEVIDE;
-	
-	return adjacent;
+    adjacent -= NORMALIZE_SUBTRACT;
+    adjacent /= NORMALIZE_DEVIDE;
+
+    return adjacent;
 }
 
 int remove(std::vector<std::string> &grid, size_t y, size_t x)
 {
-	int removed { 1 };
+    int removed { 1 };
 
-	if (grid[y][x] == '.' || getAdjacentRolls(grid, y, x) >= 4)
-		return 0;
+    if (grid[y][x] == '.' || getAdjacentRolls(grid, y, x) >= 4)
+        return 0;
 
-	grid[y][x] = '.';
+    grid[y][x] = '.';
 
-	removed += remove(grid, y-1, x+1) + remove(grid, y, x+1) + remove(grid, y+1, x+1);
-	removed += remove(grid, y-1,  x )                  		 + remove(grid, y+1,  x );
-	removed += remove(grid, y-1, x-1) + remove(grid, y, x-1) + remove(grid, y+1, x-1);
+    removed += remove(grid, y-1, x+1) + remove(grid, y, x+1) + remove(grid, y+1, x+1);
+    removed += remove(grid, y-1,  x )                        + remove(grid, y+1,  x );
+    removed += remove(grid, y-1, x-1) + remove(grid, y, x-1) + remove(grid, y+1, x-1);
 
-	return removed;
+    return removed;
 }
