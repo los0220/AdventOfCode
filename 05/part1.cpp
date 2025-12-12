@@ -12,15 +12,15 @@ struct Range
     int64_t start;
     int64_t end;
 
-    bool operator <(Range const& rhs) const 
+    bool operator <(Range const& rhs) const
     {
         return (start < rhs.start) || (start == rhs.start && end < rhs.end);
-    }	
+    }
 };
 
 int solve(std::string const& fileName, bool verbose);
 int countAvailableFresh(
-    std::vector<Range> const& freshRanges, 
+    std::vector<Range> const& freshRanges,
     std::vector<int64_t> const& availableIDs
 );
 
@@ -48,18 +48,18 @@ int main(int argc, char* argv[])
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
 
     std::cout << "Time taken: " << duration.count() << " μs \n";
-        
+
     return 0;
 }
 
 int solve(std::string const& fileName, bool verbose)
-{	
+{
     std::ifstream f(fileName);
     std::string s {};
     std::vector<Range> freshRanges {};
-    std::vector<int64_t> availableIDs {};	
+    std::vector<int64_t> availableIDs {};
     int result { 0 };
-        
+
     if (!f.is_open())
     {
         std::cerr << "Can't open " << fileName << "\n";
@@ -69,9 +69,9 @@ int solve(std::string const& fileName, bool verbose)
     while (std::getline(f, s))
     {
         int64_t first { 0 };
-        int64_t second { 0 }; 
+        int64_t second { 0 };
         char dash { '\0' };
-    
+
         std::istringstream iss(s);
 
         if ( !(iss >> first) )
@@ -88,7 +88,7 @@ int solve(std::string const& fileName, bool verbose)
         {
             if (verbose)
                 std::cout << first << "\n";
-            
+
             availableIDs.push_back(first);
         }
     }
@@ -97,20 +97,20 @@ int solve(std::string const& fileName, bool verbose)
 
     std::sort(freshRanges.begin(), freshRanges.end());
     std::sort(availableIDs.begin(), availableIDs.end());
-    
+
     result = countAvailableFresh(freshRanges, availableIDs);
     std::cout << result << "\n";
 
-    return 0;	
+    return 0;
 }
 
 int countAvailableFresh(
-    std::vector<Range> const& freshRanges, 
+    std::vector<Range> const& freshRanges,
     std::vector<int64_t> const& availableIDs
 ) {
     int freshCount {0};
     auto lastIt = freshRanges.begin();
-    
+
     for (int64_t id : availableIDs)
     {
         for(auto it = lastIt; it != freshRanges.end(); ++it)
