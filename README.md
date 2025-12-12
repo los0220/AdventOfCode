@@ -5,6 +5,7 @@
 - Day 3: C++11
 - Day 4: C++17
 - Day 5: C++17
+- Day 6: C++17
 
 ## Input files
 
