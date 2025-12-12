@@ -62,13 +62,15 @@ int solve(std::string const& fileName, bool verbose)
         return -1;
     }
 
+    std::istringstream iss(s);
     while (std::getline(f, s))
     {
         int64_t first { 0 };
         int64_t second { 0 };
         char dash { '\0' };
 
-        std::istringstream iss(s);
+        iss.clear();
+        iss.str(s);
 
         if (!(iss >> first >> dash >> second && dash == '-'))
             break;
