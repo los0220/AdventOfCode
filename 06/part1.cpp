@@ -67,7 +67,7 @@ int main(int argc, char* argv[])
 }
 
 int solve(std::string const& fileName, Verbose verbose)
-{	
+{
     std::ifstream f(fileName);
     std::string line {};
     std::istringstream iss {};
@@ -143,7 +143,7 @@ int solve(std::string const& fileName, Verbose verbose)
     result = doTheMath(numbers, operations);
     std::cout << result << "\n";
 
-    return 0;	
+    return 0;
 }
 
 int64_t doTheMath(
