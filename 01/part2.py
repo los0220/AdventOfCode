@@ -25,7 +25,7 @@ def main(input_path):
 
             if position == 0:
                 global_sum += 1
-            
+
     print(global_sum)
 
 if __name__ == "__main__":
