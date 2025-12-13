@@ -4,61 +4,35 @@
 #include <sstream>
 #include <stdint.h>
 #include <string>
-#include <sstream>
 #include <vector>
 
-class Verbose
+struct Equation
 {
-public:
-    Verbose(bool verbose): m_verbose(verbose) {}
+    std::vector<int> numbers;
+    char operation;
 
-    template <typename T>
-    void print(std::vector<T> vec) const
-    {
-        if(!m_verbose)
-            return;
-
-        for (auto const& i : vec)
-            std::cout << i << " ";
-
-        std::cout << "\n";
-    }
-    operator bool() const
-    {
-        return m_verbose;
-    }
-private:
-    bool m_verbose;
+    int64_t calculate(void) const;
+    void print(void) const;
 };
 
-class Equation
-{
-  std::vector<int> numbers {};
-  char operation { '\0' };  
-};
-
-int solve(std::string const& fileName, Verbose verbose);
+int solve(std::string const& fileName, bool verbose);
 int parseInput(
-    const std::vector<std::string>& rows, 
-    std::vector<std::vector<int>>& numbers, 
-    std::vector<char>& operations
+    const std::vector<std::string>& rows,
+    std::vector<Equation>& equations
 );
-int64_t doTheMath(
-    const std::vector<std::vector<int>>& numbers,
-    const std::vector<char>& operations
-);
+int64_t doTheMath(std::vector<Equation>& equations);
 
 
 int main(int argc, char* argv[])
 {
     const std::string VERBOSE_FLAG { "-v" };
     std::string fileName {};
-    Verbose verbose(false);
+    bool verbose { false };
 
     if (argc == 3 && argv[1] == VERBOSE_FLAG)
     {
         fileName = argv[2];
-        verbose = Verbose(true);
+        verbose = true;
     }
     else if (argc == 2)
         fileName = argv[1];
@@ -77,11 +51,41 @@ int main(int argc, char* argv[])
     return 0;
 }
 
-int solve(std::string const& fileName, Verbose verbose)
+int64_t Equation::calculate(void) const
+{
+    int64_t result { -1 };
+    switch(operation)
+    {
+    case '*':
+        result = 1;
+        for (int n : numbers)
+            result *= static_cast<int64_t>(n);
+        break;
+    case '+':
+        result = 0;
+        for (int n : numbers)
+            result += static_cast<int64_t>(n);
+        break;
+    }
+
+    return result;
+}
+
+void Equation::print(void) const
+{
+    std::cout << operation << "  ";
+    for (int n : numbers)
+        std::cout << n << " ";
+
+    std::cout << "= " << calculate() << "\n";
+}
+
+int solve(std::string const& fileName, bool verbose)
 {
     std::ifstream f(fileName);
     std::string line {};
     std::vector<std::string> rows {};
+    std::vector<Equation> equations {};
     int64_t result { 0 };
 
     if (!f.is_open())
@@ -104,43 +108,37 @@ int solve(std::string const& fileName, Verbose verbose)
         }
     }
 
-    std::vector<std::vector<int>> numbers {}; 
-    std::vector<char> operations {};
-    parseInput(rows, numbers, operations);
+    parseInput(rows, equations);
 
     if (verbose)
     {
-        for (size_t i = 0; i < numbers.size(); ++i)
-        {
-            std::cout << operations[i] << "  ";
-            verbose.print(numbers[i]);
-        }
+        for (const Equation& eq : equations)
+            eq.print();
     }
 
-    result = doTheMath(numbers, operations);
+    result = doTheMath(equations);
     std::cout << result << "\n";
 
     return 0;
 }
 
 int parseInput(
-    const std::vector<std::string>& rows, 
-    std::vector<std::vector<int>>& numbers, 
-    std::vector<char>& operations
+    const std::vector<std::string>& rows,
+    std::vector<Equation>& equations
 )
 {
     size_t rowLen { rows[0].size() };
     size_t colLen { rows.size() };
-    std::vector<int> equation {};
-    int num { 0 };
-    
-    for (size_t x = 1; x <= rowLen; ++x)
+    Equation eq {{}, '\0'};
+
+    for (size_t x = 0; x < rowLen; ++x)
     {
         char input { '\0' };
+        int num { 0 };
 
         for (size_t y = 0; y < colLen; ++y)
         {
-            input = rows[y][rowLen - x];
+            input = rows[y][rowLen - x - 1];
 
             if ('0' <= input && input <= '9')
             {
@@ -148,59 +146,29 @@ int parseInput(
                 num += static_cast<int>(input - '0');
             }
             else if (input == '+' || input == '*')
-            {
-                operations.push_back(input);
-                equation.push_back(num);
-                num = 0;
-                numbers.push_back(equation);
-                equation.clear();
-            }
+                break;
         }
-        
+
         if (num > 0)
+            eq.numbers.push_back(num);
+
+        if (input == '+' || input == '*')
         {
-            equation.push_back(num);
-            num = 0;
+            eq.operation = input;
+            equations.push_back(std::move(eq));
         }
     }
-    
-    if (numbers.size() != operations.size())
-    {
-        std::cerr << "Vector lenghts do not match! \n";
-        return -1;
-    }
-    
+
     return 0;
 }
 
-int64_t doTheMath(
-    const std::vector<std::vector<int>>& numbers,
-    const std::vector<char>& operations
-)
+int64_t doTheMath(std::vector<Equation>& equations)
 {
     int64_t totalSum { 0 };
 
-    for (size_t i = 0; i < numbers.size(); ++i)
+    for (const Equation& eq : equations)
     {
-        int64_t equationResult { 0 };
-
-        if (operations[i] == '*')
-            equationResult = 1;
-
-        for (size_t j = 0; j < numbers[i].size(); ++j)
-        {
-            switch(operations[i])
-            {
-                case '*':
-                    equationResult *= static_cast<int64_t>(numbers[i][j]);
-                    break;
-                case '+':
-                    equationResult += static_cast<int64_t>(numbers[i][j]);
-                    break;
-            }
-        }
-
-        totalSum += equationResult;
+        totalSum += eq.calculate();
     }
 
     return totalSum;
