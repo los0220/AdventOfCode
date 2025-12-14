@@ -12,6 +12,7 @@ I wanted this to be a fun learing exercise, so I decided not to use **any LLMs**
 - Day 4: C++17
 - Day 5: C++17
 - Day 6: C++17
+- Day 7: C++17
 
 ## Input files
 
