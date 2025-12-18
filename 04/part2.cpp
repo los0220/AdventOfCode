@@ -12,71 +12,6 @@ enum MapLegend : char {
     PAPER_ROLL = '@'
 };
 
-int solve(const std::string& fileName, const bool verbose);
-int removeAccesibleRolls(std::vector<std::string> &grid, const bool verbose);
-int getAdjacentRolls(const std::vector<std::string>& grid,
-                     const size_t y, const size_t x);
-int remove(std::vector<std::string>& grid, const size_t y, const size_t x);
-
-int solve(const std::string& fileName, const bool verbose)
-{
-    std::ifstream f(fileName);
-    std::vector<std::string> grid { {} };
-
-    if (!f.is_open()) {
-        std::cerr << "Can't open " << fileName << "\n";
-        return 1;
-    }
-
-    std::string s {};
-    while (std::getline(f, s))
-    {
-        if (verbose)
-            std::cout << s << "\n";
-
-        if (grid.size() > 2 && grid[1].size() != s.size() + 2)
-        {
-            std::cerr << "Line sizes don't match \n";
-            return 1;
-        }
-
-        grid.push_back(std::string{char{MapLegend::EMPTY} + s +
-                                   char{MapLegend::EMPTY}});
-    }
-
-    f.close();
-
-    const size_t XLIM { grid[1].size() };
-    grid[0].resize(XLIM, MapLegend::EMPTY);
-    grid.push_back(std::string(XLIM, MapLegend::EMPTY));
-
-    std::cout << removeAccesibleRolls(grid, verbose) << "\n";
-
-    return 0;
-}
-
-
-int removeAccesibleRolls(std::vector<std::string> &grid, const bool verbose)
-{
-    const size_t YLIM { grid.size() - 1 };
-    const size_t XLIM { grid[0].size() - 1 };
-    int removed { 0 };
-
-    for (size_t y = 1; y < YLIM; ++y)
-    {
-        for(size_t x = 1; x < XLIM; ++x)
-            removed += remove(grid, y, x);
-    }
-
-    if (verbose)
-    {
-        for (const std::string& s : grid)
-            std::cout << s << "\n";
-    }
-
-    return removed;
-}
-
 int getAdjacentRolls(const std::vector<std::string>& grid,
                      const size_t y, const size_t x)
 {
@@ -114,6 +49,64 @@ int remove(std::vector<std::string> &grid, const size_t y, const size_t x)
     removed += remove(grid,y-1,x-1) + remove(grid,y,x-1) + remove(grid,y+1,x-1);
 
     return removed;
+}
+
+int removeAccesibleRolls(std::vector<std::string> &grid, const bool verbose)
+{
+    const size_t YLIM { grid.size() - 1 };
+    const size_t XLIM { grid[0].size() - 1 };
+    int removed { 0 };
+
+    for (size_t y = 1; y < YLIM; ++y)
+    {
+        for(size_t x = 1; x < XLIM; ++x)
+            removed += remove(grid, y, x);
+    }
+
+    if (verbose)
+    {
+        for (const std::string& s : grid)
+            std::cout << s << "\n";
+    }
+
+    return removed;
+}
+
+int solve(const std::string& fileName, const bool verbose)
+{
+    std::ifstream f(fileName);
+    std::vector<std::string> grid { {} };
+
+    if (!f.is_open()) {
+        std::cerr << "Can't open " << fileName << "\n";
+        return 1;
+    }
+
+    std::string s {};
+    while (std::getline(f, s))
+    {
+        if (verbose)
+            std::cout << s << "\n";
+
+        if (grid.size() > 2 && grid[1].size() != s.size() + 2)
+        {
+            std::cerr << "Line sizes don't match \n";
+            return 1;
+        }
+
+        grid.push_back(std::string{char{MapLegend::EMPTY} + s +
+                                   char{MapLegend::EMPTY}});
+    }
+
+    f.close();
+
+    const size_t XLIM { grid[1].size() };
+    grid[0].resize(XLIM, MapLegend::EMPTY);
+    grid.push_back(std::string(XLIM, MapLegend::EMPTY));
+
+    std::cout << removeAccesibleRolls(grid, verbose) << "\n";
+
+    return 0;
 }
 
 }  // namespace

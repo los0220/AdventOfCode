@@ -12,10 +12,46 @@ enum MapLegend : char {
     PAPER_ROLL = '@'
 };
 
-int solve(const std::string& fileName, const bool verbose);
-int getAccesibleRolls(const std::vector<std::string>& grid);
 int getAdjacentRolls(const std::vector<std::string>& grid,
-                     const size_t y, const size_t x);
+                     const size_t y, const size_t x)
+{
+    static constexpr int ADJACENT_POSITIONS { 8 };
+    static constexpr int NORMALIZE_SUBTRACT { ADJACENT_POSITIONS *
+                                              int{MapLegend::EMPTY} };
+    static constexpr int NORMALIZE_DEVIDE   { int{MapLegend::PAPER_ROLL -
+                                                  MapLegend::EMPTY} };
+    int adjacent { 0 };
+
+    adjacent += int{grid[y-1][x-1]} + int{grid[y][x-1]} + int{grid[y+1][x-1]};
+    adjacent += int{grid[y-1][ x ]}                     + int{grid[y+1][ x ]};
+    adjacent += int{grid[y-1][x+1]} + int{grid[y][x+1]} + int{grid[y+1][x+1]};
+
+    adjacent = (adjacent - NORMALIZE_SUBTRACT) / NORMALIZE_DEVIDE;
+
+    return adjacent;
+}
+
+int getAccesibleRolls(const std::vector<std::string>& grid)
+{
+    static constexpr int ACCESIBLE_MAX_ADJACENT { 3 };
+    const size_t YLIM { grid.size() - 1 };
+    const size_t XLIM { grid[0].size() - 1 };
+    int accesible { 0 };
+
+    for (size_t y = 1; y < YLIM; ++y)
+    {
+        for(size_t x = 1; x < XLIM; ++x)
+        {
+            if (grid[y][x] == MapLegend::PAPER_ROLL &&
+                getAdjacentRolls(grid, y, x) <= ACCESIBLE_MAX_ADJACENT)
+            {
+                ++accesible;
+            }
+        }
+    }
+
+    return accesible;
+}
 
 int solve(const std::string& fileName, const bool verbose)
 {
@@ -52,47 +88,6 @@ int solve(const std::string& fileName, const bool verbose)
     std::cout << getAccesibleRolls(grid) << "\n";
 
     return 0;
-}
-
-int getAccesibleRolls(const std::vector<std::string>& grid)
-{
-    static constexpr int ACCESIBLE_MAX_ADJACENT { 3 };
-    const size_t YLIM { grid.size() - 1 };
-    const size_t XLIM { grid[0].size() - 1 };
-    int accesible { 0 };
-
-    for (size_t y = 1; y < YLIM; ++y)
-    {
-        for(size_t x = 1; x < XLIM; ++x)
-        {
-            if (grid[y][x] == MapLegend::PAPER_ROLL &&
-                getAdjacentRolls(grid, y, x) <= ACCESIBLE_MAX_ADJACENT)
-            {
-                ++accesible;
-            }
-        }
-    }
-
-    return accesible;
-}
-
-int getAdjacentRolls(const std::vector<std::string>& grid,
-                     const size_t y, const size_t x)
-{
-    static constexpr int ADJACENT_POSITIONS { 8 };
-    static constexpr int NORMALIZE_SUBTRACT { ADJACENT_POSITIONS *
-                                              int{MapLegend::EMPTY} };
-    static constexpr int NORMALIZE_DEVIDE   { int{MapLegend::PAPER_ROLL -
-                                                  MapLegend::EMPTY} };
-    int adjacent { 0 };
-
-    adjacent += int{grid[y-1][x-1]} + int{grid[y][x-1]} + int{grid[y+1][x-1]};
-    adjacent += int{grid[y-1][ x ]}                     + int{grid[y+1][ x ]};
-    adjacent += int{grid[y-1][x+1]} + int{grid[y][x+1]} + int{grid[y+1][x+1]};
-
-    adjacent = (adjacent - NORMALIZE_SUBTRACT) / NORMALIZE_DEVIDE;
-
-    return adjacent;
 }
 
 }  // namespace
