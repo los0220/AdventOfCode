@@ -1,17 +1,126 @@
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <vector>
 #include <chrono>
+#include <fstream>
+#include <iostream>
+#include <string>
+#include <string_view>
+#include <vector>
 
-int solve(std::string const& fileName, bool verbose);
-int removeAccesibleRolls(std::vector<std::string> &grid, bool verbose);
-int getAdjacentRolls(std::vector<std::string> const& grid, size_t y, size_t x);
-int remove(std::vector<std::string> &grid, size_t y, size_t x);
+namespace {
+
+enum MapLegend : char {
+    EMPTY = '.',
+    PAPER_ROLL = '@'
+};
+
+int solve(const std::string& fileName, const bool verbose);
+int removeAccesibleRolls(std::vector<std::string> &grid, const bool verbose);
+int getAdjacentRolls(const std::vector<std::string>& grid,
+                     const size_t y, const size_t x);
+int remove(std::vector<std::string>& grid, const size_t y, const size_t x);
+
+int solve(const std::string& fileName, const bool verbose)
+{
+    std::ifstream f(fileName);
+    std::vector<std::string> grid { {} };
+
+    if (!f.is_open()) {
+        std::cerr << "Can't open " << fileName << "\n";
+        return 1;
+    }
+
+    std::string s {};
+    while (std::getline(f, s))
+    {
+        if (verbose)
+            std::cout << s << "\n";
+
+        if (grid.size() > 2 && grid[1].size() != s.size() + 2)
+        {
+            std::cerr << "Line sizes don't match \n";
+            return 1;
+        }
+
+        grid.push_back(std::string{char{MapLegend::EMPTY} + s +
+                                   char{MapLegend::EMPTY}});
+    }
+
+    f.close();
+
+    const size_t XLIM { grid[1].size() };
+    grid[0].resize(XLIM, MapLegend::EMPTY);
+    grid.push_back(std::string(XLIM, MapLegend::EMPTY));
+
+    std::cout << removeAccesibleRolls(grid, verbose) << "\n";
+
+    return 0;
+}
+
+
+int removeAccesibleRolls(std::vector<std::string> &grid, const bool verbose)
+{
+    const size_t YLIM { grid.size() - 1 };
+    const size_t XLIM { grid[0].size() - 1 };
+    int removed { 0 };
+
+    for (size_t y = 1; y < YLIM; ++y)
+    {
+        for(size_t x = 1; x < XLIM; ++x)
+            removed += remove(grid, y, x);
+    }
+
+    if (verbose)
+    {
+        for (const std::string& s : grid)
+            std::cout << s << "\n";
+    }
+
+    return removed;
+}
+
+int getAdjacentRolls(const std::vector<std::string>& grid,
+                     const size_t y, const size_t x)
+{
+    static constexpr int ADJACENT_POSITIONS { 8 };
+    static constexpr int NORMALIZE_SUBTRACT { ADJACENT_POSITIONS *
+                                              int{MapLegend::EMPTY} };
+    static constexpr int NORMALIZE_DEVIDE   { int{MapLegend::PAPER_ROLL -
+                                                  MapLegend::EMPTY} };
+    int adjacent { 0 };
+
+    adjacent += int{grid[y-1][x-1]} + int{grid[y][x-1]} + int{grid[y+1][x-1]};
+    adjacent += int{grid[y-1][ x ]}                     + int{grid[y+1][ x ]};
+    adjacent += int{grid[y-1][x+1]} + int{grid[y][x+1]} + int{grid[y+1][x+1]};
+
+    adjacent = (adjacent - NORMALIZE_SUBTRACT) / NORMALIZE_DEVIDE;
+
+    return adjacent;
+}
+
+int remove(std::vector<std::string> &grid, const size_t y, const size_t x)
+{
+    static constexpr int ACCESIBLE_MAX_ADJACENT { 3 };
+    int removed { 1 };
+
+    if (grid[y][x] == MapLegend::EMPTY ||
+        getAdjacentRolls(grid, y, x) > ACCESIBLE_MAX_ADJACENT)
+    {
+        return 0;
+    }
+
+    grid[y][x] = MapLegend::EMPTY;
+
+    removed += remove(grid,y-1,x+1) + remove(grid,y,x+1) + remove(grid,y+1,x+1);
+    removed += remove(grid,y-1, x )                      + remove(grid,y+1, x );
+    removed += remove(grid,y-1,x-1) + remove(grid,y,x-1) + remove(grid,y+1,x-1);
+
+    return removed;
+}
+
+}  // namespace
 
 int main(int argc, char* argv[])
 {
-    const std::string VERBOSE_FLAG { "-v" };
+    static constexpr std::string_view VERBOSE_FLAG { "-v" };
     std::string fileName {};
     bool verbose { false };
 
@@ -21,104 +130,24 @@ int main(int argc, char* argv[])
         verbose = true;
     }
     else if (argc == 2)
+    {
         fileName = argv[1];
+    }
     else
-        return -1;
+    {
+        std::cerr << "No input passed! \n";
+        return 1;
+    }
 
     auto start = std::chrono::high_resolution_clock::now();
 
     solve(fileName, verbose);
 
     auto stop = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
+        stop - start);
 
     std::cout << "Time taken: " << duration.count() << " μs \n";
 
     return 0;
-}
-
-int solve(std::string const& fileName, bool verbose)
-{
-    std::ifstream f(fileName);
-    std::string s {};
-    std::vector<std::string> grid {{}};
-    size_t xLim {0};
-
-    if (!f.is_open())
-    {
-        std::cerr << "Can't open " << fileName << "\n";
-        return -1;
-    }
-
-    while (std::getline(f, s))
-    {
-        if (verbose)
-            std::cout << s << "\n";
-
-        grid.push_back(std::string("." + s + "."));
-    }
-    // maybe implement len check for every row?
-
-    f.close();
-
-    xLim = grid[1].size();
-    grid[0].resize(xLim, '.');
-    grid.push_back(std::string(xLim, '.'));
-
-    std::cout << removeAccesibleRolls(grid, verbose) << "\n";
-
-    return 0;
-}
-
-int removeAccesibleRolls(std::vector<std::string> &grid, bool verbose)
-{
-    int removed { 0 };
-    size_t yLim { grid.size() - 1 };
-    size_t xLim { grid[0].size() - 1 };
-
-    for (size_t y = 1; y < yLim; ++y)
-    {
-        for(size_t x = 1; x < xLim; ++x)
-            removed += remove(grid, y, x);
-    }
-
-    if (verbose)
-    {
-        for (auto& s : grid)
-            std::cout << s << "\n";
-    }
-
-    return removed;
-}
-
-int getAdjacentRolls(std::vector<std::string> const& grid, size_t y, size_t x)
-{
-    int adjacent { 0 };
-    static constexpr int NORMALIZE_SUBTRACT { 8 * static_cast<int>('.') };
-    static constexpr int NORMALIZE_DEVIDE   { static_cast<int>('@' - '.') };
-
-    adjacent += (int)grid[y-1][x-1] + (int)grid[y][x-1] + (int)grid[y+1][x-1];
-    adjacent += (int)grid[y-1][ x ]                     + (int)grid[y+1][ x ];
-    adjacent += (int)grid[y-1][x+1] + (int)grid[y][x+1] + (int)grid[y+1][x+1];
-
-    adjacent -= NORMALIZE_SUBTRACT;
-    adjacent /= NORMALIZE_DEVIDE;
-
-    return adjacent;
-}
-
-int remove(std::vector<std::string> &grid, size_t y, size_t x)
-{
-    int removed { 1 };
-
-    if (grid[y][x] == '.' || getAdjacentRolls(grid, y, x) >= 4)
-        return 0;
-
-    grid[y][x] = '.';
-
-    removed += remove(grid, y-1, x+1) + remove(grid, y, x+1) + remove(grid, y+1, x+1);
-    removed += remove(grid, y-1,  x )                        + remove(grid, y+1,  x );
-    removed += remove(grid, y-1, x-1) + remove(grid, y, x-1) + remove(grid, y+1, x-1);
-
-    return removed;
 }
