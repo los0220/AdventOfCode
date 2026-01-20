@@ -46,7 +46,9 @@ int solve(const std::string& fileName, const bool verbose)
     while (std::getline(f, s))
     {
         if (verbose)
+        {
             std::cout << s << "\n";
+        }
 
         if (grid.size() > 2 && grid[1].size() != s.size() + 2)
         {

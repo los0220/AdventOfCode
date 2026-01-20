@@ -39,13 +39,17 @@ int removeAccesibleRolls(std::vector<std::string> &grid, const bool verbose)
     for (size_t y = 1; y < YLIM; ++y)
     {
         for(size_t x = 1; x < XLIM; ++x)
+        {
             removed += remove(grid, y, x);
+        }
     }
 
     if (verbose)
     {
         for (const std::string& s : grid)
+        {
             std::cout << s << "\n";
+        }
     }
 
     return removed;
@@ -65,7 +69,9 @@ int solve(const std::string& fileName, const bool verbose)
     while (std::getline(f, s))
     {
         if (verbose)
+        {
             std::cout << s << "\n";
+        }
 
         if (grid.size() > 2 && grid[1].size() != s.size() + 2)
         {

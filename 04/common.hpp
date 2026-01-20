@@ -29,7 +29,7 @@ int getAdjacentRolls(const std::vector<std::string>& grid,
 
     return adjacent;
 }
-    
+
 }  // namespace day04
 
 #endif  // COMMON_HPP_
