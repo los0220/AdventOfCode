@@ -42,21 +42,22 @@ int solve(const std::string& fileName, const bool verbose)
         return 1;
     }
 
-    std::string s {};
-    while (std::getline(f, s))
+    std::string line {};
+    while (std::getline(f, line))
     {
         if (verbose)
         {
-            std::cout << s << "\n";
+            std::cout << line << "\n";
         }
 
-        if (grid.size() > 2 && grid[1].size() != s.size() + 2)
+        size_t paddedLineSize { line.size() + 2 };
+        if (grid.size() > 2 && grid[1].size() != paddedLineSize)
         {
             std::cerr << "Line sizes don't match \n";
             return 1;
         }
 
-        grid.push_back(std::string{char{MapLegend::EMPTY} + s +
+        grid.push_back(std::string{char{MapLegend::EMPTY} + line +
                                    char{MapLegend::EMPTY}});
     }
 
