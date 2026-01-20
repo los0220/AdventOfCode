@@ -11,8 +11,8 @@ enum MapLegend : char {
     PAPER_ROLL = '@'
 };
 
-int getAdjacentRolls(const std::vector<std::string>& grid,
-                     const size_t y, const size_t x)
+inline int getAdjacentRolls(const std::vector<std::string>& grid,
+                            const size_t y, const size_t x)
 {
     static constexpr int ADJACENT_POSITIONS { 8 };
     static constexpr int NORMALIZE_SUBTRACT { ADJACENT_POSITIONS *
