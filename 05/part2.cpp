@@ -17,43 +17,37 @@ struct Range
 
     bool operator <(Range const& rhs) const
     {
-        if (start != rhs.start)
-        {
-            return start < rhs.start;
-        }
-
-        return end < rhs.end;
+       return start < rhs.start;
     }
 };
 
 int64_t countIDsInRanges(std::vector<Range>& ranges)
 {
-    int64_t totalIDs { 0 };
-
     std::sort(ranges.begin(), ranges.end());
 
-    for (auto curIt = ranges.begin(); curIt != ranges.end(); ++curIt)
+    int64_t totalIDs { 0 };
+    Range currentRange { ranges[0] };
+
+    for (auto nextIt = ranges.begin() + 1; nextIt != ranges.end(); ++nextIt)
     {
-        for (auto nextIt = curIt+1; nextIt != ranges.end(); )
+        bool isGapBetweenRanges { currentRange.end + 1 < nextIt->start };
+        if (isGapBetweenRanges)
         {
-            bool isGapBetweenRanges { curIt->end + 1 < nextIt->start };
-            if (isGapBetweenRanges)
-            {
-                break;
-            }
+            int64_t idsInRange { currentRange.end - currentRange.start + 1 };
+            totalIDs += idsInRange;
 
-            bool doesNextRangeExtendCurrent { curIt->end < nextIt->end };
-            if (doesNextRangeExtendCurrent)
-            {
-                curIt->end = nextIt->end;
-            }
-
-            nextIt = ranges.erase(nextIt);
+            currentRange = *nextIt;
         }
 
-        int64_t idsInRange { curIt->end - curIt->start + 1 };
-        totalIDs += idsInRange;
+        bool doesNextRangeExtendCurrent { currentRange.end < nextIt->end };
+        if (doesNextRangeExtendCurrent)
+        {
+            currentRange.end = nextIt->end;
+        }
     }
+
+    int64_t idsInRange { currentRange.end - currentRange.start + 1 };
+    totalIDs += idsInRange;
 
     return totalIDs;
 }
