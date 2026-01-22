@@ -36,12 +36,14 @@ int64_t countIDsInRanges(std::vector<Range>& ranges)
     {
         for (auto nextIt = curIt+1; nextIt != ranges.end(); )
         {
-            if (curIt->end + 1 < nextIt->start)
+            bool isGapBetweenRanges { curIt->end + 1 < nextIt->start };
+            if (isGapBetweenRanges)
             {
                 break;
             }
 
-            if (curIt->end < nextIt->end)
+            bool doesNextRangeExtendCurrent { curIt->end < nextIt->end };
+            if (doesNextRangeExtendCurrent)
             {
                 curIt->end = nextIt->end;
             }
@@ -49,7 +51,8 @@ int64_t countIDsInRanges(std::vector<Range>& ranges)
             nextIt = ranges.erase(nextIt);
         }
 
-        totalIDs += curIt->end - curIt->start + 1;
+        int64_t idsInRange { curIt->end - curIt->start + 1 };
+        totalIDs += idsInRange;
     }
 
     return totalIDs;
@@ -63,7 +66,7 @@ int solve(const std::string& fileName, const bool verbose)
     if (!f.is_open())
     {
         std::cerr << "Can't open " << fileName << "\n";
-        return -1;
+        return 1;
     }
 
     std::string s {};

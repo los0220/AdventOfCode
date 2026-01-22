@@ -26,9 +26,12 @@ struct Range
     }
 };
 
-int countAvailableFresh(const std::vector<Range>& freshRanges,
-                        const std::vector<int64_t>& availableIDs)
+int countAvailableFresh(std::vector<Range>& freshRanges,
+                        std::vector<int64_t>& availableIDs)
 {
+    std::sort(freshRanges.begin(), freshRanges.end());
+    std::sort(availableIDs.begin(), availableIDs.end());
+
     int freshCount { 0 };
     auto lastIt = freshRanges.begin();
 
@@ -97,9 +100,6 @@ int solve(const std::string& fileName, const bool verbose)
     }
 
     f.close();
-
-    std::sort(freshRanges.begin(), freshRanges.end());
-    std::sort(availableIDs.begin(), availableIDs.end());
 
     int result { countAvailableFresh(freshRanges, availableIDs) };
     std::cout << result << "\n";
