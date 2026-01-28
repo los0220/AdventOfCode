@@ -10,15 +10,10 @@
 
 namespace {
 
-enum ReadState
-{
-    READ_RANGES,
-    READ_IDS
-};
-
+// TODO: move this into the InputParser class
 class Verbose
 {
-public:
+ public:
     Verbose(bool verbose): m_verbose(verbose) {}
 
     template <typename T>
@@ -40,9 +35,121 @@ public:
         return m_verbose;
     }
 
-private:
+ private:
     bool m_verbose;
 };
+
+class InputParser
+{
+ public:
+    void setVerbose(const Verbose verbose)
+    {
+        m_verbose = verbose;
+    }
+
+    int parse(const std::string& fileName,
+              std::vector<std::vector<int64_t>>& numbers,
+              std::vector<char>& operations);
+
+ private:
+    enum ReadState
+    {
+        READ_NUMBERS,
+        READ_OPERATIONS
+    };
+
+    ReadState m_readState { READ_NUMBERS };
+    Verbose m_verbose { false };
+    std::string m_line {};
+    std::istringstream m_iss {};
+
+    void parseLineOfNumbers(std::vector<std::vector<int64_t>>& numbers);
+    void parseLineOfOperations(std::vector<char>& operations, size_t rowLen);
+};
+
+int InputParser::parse(const std::string& fileName,
+          std::vector<std::vector<int64_t>>& numbers,
+          std::vector<char>& operations)
+{
+    std::ifstream f(fileName);
+    if (!f.is_open())
+    {
+        std::cerr << "Can't open " << fileName << "\n";
+        return 1;
+    }
+
+    while (std::getline(f, m_line))
+    {
+        if (m_readState == READ_NUMBERS)
+        {
+            parseLineOfNumbers(numbers);
+        }
+
+        if (m_readState == READ_OPERATIONS)
+        {
+            size_t rowLen { 0 };
+            if (numbers.size() > 0)
+            {
+                rowLen = numbers[0].size();
+            }
+
+            parseLineOfOperations(operations, rowLen);
+        }
+    }
+
+    f.close();
+
+    return 0;
+}
+
+void InputParser::parseLineOfNumbers(std::vector<std::vector<int64_t>>& numbers)
+{
+    int matches { 0 };
+    int64_t inNumber { 0 };
+    std::vector<int64_t> tempNumbers {};
+
+    m_iss.str(m_line);
+
+    if (numbers.size() != 0)
+    {
+        tempNumbers.reserve(numbers[0].size());
+    }
+
+    while (m_iss >> inNumber)
+    {
+        tempNumbers.push_back(inNumber);
+        ++matches;
+    }
+
+    m_verbose.print(tempNumbers);
+
+    if (matches > 0)
+    {
+        numbers.push_back(std::move(tempNumbers));
+    }
+    else
+    {
+        m_readState = READ_OPERATIONS;
+    }
+
+    m_iss.clear();
+}
+
+void InputParser::parseLineOfOperations(std::vector<char>& operations, size_t rowLen)
+{
+    m_iss.str(m_line);
+
+    operations.reserve(rowLen);
+
+    char inChar { '\0' };
+    while (m_iss >> inChar && (inChar == '*' || inChar == '+'))
+        operations.push_back(inChar);
+
+    m_verbose.print(operations);
+
+    m_iss.clear();
+}
+
 
 int64_t doTheMath(const std::vector<std::vector<int64_t>>& numbers,
                   const std::vector<char>& operations)
@@ -75,76 +182,14 @@ int64_t doTheMath(const std::vector<std::vector<int64_t>>& numbers,
     return totalSum;
 }
 
-// TODO: split the file reading and parsing into a separate function
 int solve(const std::string& fileName, const Verbose verbose)
 {
-    std::ifstream f(fileName);
     std::vector<std::vector<int64_t>> numbers {};
     std::vector<char> operations {};
 
-    if (!f.is_open())
-    {
-        std::cerr << "Can't open " << fileName << "\n";
-        return 1;
-    }
-
-    ReadState readState { READ_RANGES };
-    std::string line {};
-    std::istringstream iss {};
-    while (std::getline(f, line))
-    {
-        if (readState == READ_RANGES)
-        {
-            int matches { 0 };
-            int64_t inNumber { 0 };
-            std::vector<int64_t> tempNumbers {};
-
-            iss.str(line);
-
-            if (numbers.size() != 0)
-            {
-                tempNumbers.reserve(numbers[0].size());
-            }
-
-            while (iss >> inNumber)
-            {
-                tempNumbers.push_back(inNumber);
-                ++matches;
-            }
-
-            verbose.print(tempNumbers);
-
-            if (matches > 0)
-            {
-                numbers.push_back(std::move(tempNumbers));
-            }
-            else
-            {
-                readState = READ_IDS;
-            }
-
-            iss.clear();
-        }
-
-        if (readState == READ_IDS)
-        {
-            char inChar { '\0' };
-
-            iss.str(line);
-
-            if (numbers.size() != 0)
-                operations.reserve(numbers[0].size());
-
-            while (iss >> inChar && (inChar == '*' || inChar == '+'))
-                operations.push_back(inChar);
-
-            verbose.print(operations);
-
-            iss.clear();
-        }
-    }
-
-    f.close();
+    InputParser parser {};
+    parser.setVerbose(verbose);
+    parser.parse(fileName, numbers, operations);
 
     for (const std::vector<int64_t>& v : numbers)
     {
