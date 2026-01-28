@@ -10,14 +10,37 @@
 
 namespace {
 
-// TODO: move this into the InputParser class
-class Verbose
+class InputParser
 {
  public:
-    Verbose(bool verbose): m_verbose(verbose) {}
+    struct Result
+    {
+        std::vector<std::vector<int64_t>> numbers;
+        std::vector<char> operations;
+        bool isValid;
+    };
+
+    InputParser(const bool verbose) : m_verbose(verbose) {}
+    Result parse(const std::string& fileName);
+
+ private:
+    enum ReadState
+    {
+        READ_NUMBERS,
+        READ_OPERATIONS
+    };
+
+    ReadState m_readState { READ_NUMBERS };
+    bool m_verbose { false };
+    std::string m_line {};
+    std::istringstream m_iss {};
+
+    void parseLineOfNumbers(std::vector<std::vector<int64_t>>& numbers);
+    void parseLineOfOperations(std::vector<char>& operations,
+                               const size_t rowLen);
 
     template <typename T>
-    void print(const std::vector<T>& vec) const
+    void printIfVerbose(const std::vector<T>& vec) const
     {
         if(!m_verbose)
             return;
@@ -29,77 +52,51 @@ class Verbose
 
         std::cout << "\n";
     }
-
-    operator bool() const
-    {
-        return m_verbose;
-    }
-
- private:
-    bool m_verbose;
 };
 
-class InputParser
-{
- public:
-    void setVerbose(const Verbose verbose)
-    {
-        m_verbose = verbose;
-    }
-
-    int parse(const std::string& fileName,
-              std::vector<std::vector<int64_t>>& numbers,
-              std::vector<char>& operations);
-
- private:
-    enum ReadState
-    {
-        READ_NUMBERS,
-        READ_OPERATIONS
-    };
-
-    ReadState m_readState { READ_NUMBERS };
-    Verbose m_verbose { false };
-    std::string m_line {};
-    std::istringstream m_iss {};
-
-    void parseLineOfNumbers(std::vector<std::vector<int64_t>>& numbers);
-    void parseLineOfOperations(std::vector<char>& operations, size_t rowLen);
-};
-
-int InputParser::parse(const std::string& fileName,
-          std::vector<std::vector<int64_t>>& numbers,
-          std::vector<char>& operations)
+InputParser::Result InputParser::parse(const std::string& fileName)
 {
     std::ifstream f(fileName);
     if (!f.is_open())
     {
         std::cerr << "Can't open " << fileName << "\n";
-        return 1;
+        return {{},{},false};
     }
+
+    Result result {{},{},false};
 
     while (std::getline(f, m_line))
     {
         if (m_readState == READ_NUMBERS)
         {
-            parseLineOfNumbers(numbers);
+            parseLineOfNumbers(result.numbers);
         }
 
         if (m_readState == READ_OPERATIONS)
         {
             size_t rowLen { 0 };
-            if (numbers.size() > 0)
+            if (result.numbers.size() > 0)
             {
-                rowLen = numbers[0].size();
+                rowLen = result.numbers[0].size();
             }
 
-            parseLineOfOperations(operations, rowLen);
+            parseLineOfOperations(result.operations, rowLen);
         }
     }
 
     f.close();
 
-    return 0;
+    for (const std::vector<int64_t>& numberRow : result.numbers)
+    {
+        if (result.operations.size() != numberRow.size())
+        {
+            std::cerr << "Line lenghts do not match! \n";
+            return {{},{},false};
+        }
+    }
+
+    result.isValid = true;
+    return result;
 }
 
 void InputParser::parseLineOfNumbers(std::vector<std::vector<int64_t>>& numbers)
@@ -121,7 +118,7 @@ void InputParser::parseLineOfNumbers(std::vector<std::vector<int64_t>>& numbers)
         ++matches;
     }
 
-    m_verbose.print(tempNumbers);
+    printIfVerbose(tempNumbers);
 
     if (matches > 0)
     {
@@ -135,7 +132,8 @@ void InputParser::parseLineOfNumbers(std::vector<std::vector<int64_t>>& numbers)
     m_iss.clear();
 }
 
-void InputParser::parseLineOfOperations(std::vector<char>& operations, size_t rowLen)
+void InputParser::parseLineOfOperations(std::vector<char>& operations,
+                                        const size_t rowLen)
 {
     m_iss.str(m_line);
 
@@ -143,14 +141,16 @@ void InputParser::parseLineOfOperations(std::vector<char>& operations, size_t ro
 
     char inChar { '\0' };
     while (m_iss >> inChar && (inChar == '*' || inChar == '+'))
+    {
         operations.push_back(inChar);
+    }
 
-    m_verbose.print(operations);
+    printIfVerbose(operations);
 
     m_iss.clear();
 }
 
-
+// TODO: switch statement does not vectorize well
 int64_t doTheMath(const std::vector<std::vector<int64_t>>& numbers,
                   const std::vector<char>& operations)
 {
@@ -182,25 +182,17 @@ int64_t doTheMath(const std::vector<std::vector<int64_t>>& numbers,
     return totalSum;
 }
 
-int solve(const std::string& fileName, const Verbose verbose)
+int solve(const std::string& fileName, const bool verbose)
 {
-    std::vector<std::vector<int64_t>> numbers {};
-    std::vector<char> operations {};
+    InputParser parser(verbose);
+    InputParser::Result parsed = parser.parse(fileName);
 
-    InputParser parser {};
-    parser.setVerbose(verbose);
-    parser.parse(fileName, numbers, operations);
-
-    for (const std::vector<int64_t>& v : numbers)
+    if (!parsed.isValid)
     {
-        if (operations.size() != v.size())
-        {
-            std::cerr << "Line lenghts do not match! \n";
-            return 1;
-        }
+        return 1;
     }
 
-    int64_t result = doTheMath(numbers, operations);
+    int64_t result = doTheMath(parsed.numbers, parsed.operations);
     std::cout << result << "\n";
 
     return 0;
@@ -212,12 +204,12 @@ int main(int argc, char* argv[])
 {
     static constexpr std::string_view VERBOSE_FLAG { "-v" };
     std::string fileName {};
-    Verbose verbose(false);
+    bool verbose { false };
 
     if (argc == 3 && argv[1] == VERBOSE_FLAG)
     {
         fileName = argv[2];
-        verbose = Verbose(true);
+        verbose = true;
     }
     else if (argc == 2)
     {
