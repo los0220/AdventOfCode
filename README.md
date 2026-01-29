@@ -1,4 +1,10 @@
-# [Advent of Code](https://adventofcode.com) [2025](https://adventofcode.com/2025)
+# [Advent of Code 2025](https://adventofcode.com/2025)
+
+The goal of this year's Advent of Code was to improve my modern C++ skills up to C++23 and help me distinguish between C++ standards. I like producing performant code, so I learned how to optimize code for SIMD and AVX512, without SIMD semantics, as a bonus.
+
+I wanted this to be a fun learing exercise, so I decided not to use **any LLMs** nor look at other people's solutions before finishing a given day. I also used [micro](https://github.com/micro-editor/micro), instead of my go-to editor, to make this even more interesting.
+
+## Programing languages
 
 - Day 1: Python
 - Day 2: C99
