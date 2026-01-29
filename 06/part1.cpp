@@ -10,13 +10,19 @@
 
 namespace {
 
+enum MathOperation : char
+{
+    MULTIPLY = '*',
+    ADD      = '+',
+};
+
 class InputParser
 {
  public:
     struct Result
     {
         std::vector<std::vector<int64_t>> numbers;
-        std::vector<char> operations;
+        std::vector<MathOperation> operations;
         bool isValid;
     };
 
@@ -27,7 +33,7 @@ class InputParser
     enum ReadState
     {
         READ_NUMBERS,
-        READ_OPERATIONS
+        READ_OPERATIONS,
     };
 
     ReadState m_readState { READ_NUMBERS };
@@ -36,7 +42,7 @@ class InputParser
     std::istringstream m_iss {};
 
     void parseLineOfNumbers(std::vector<std::vector<int64_t>>& numbers);
-    void parseLineOfOperations(std::vector<char>& operations,
+    void parseLineOfOperations(std::vector<MathOperation>& operations,
                                const size_t rowLen);
 
     template <typename T>
@@ -54,6 +60,7 @@ class InputParser
     }
 };
 
+// TODO: istringstream is slow - implement custom parser, like in part2
 InputParser::Result InputParser::parse(const std::string& fileName)
 {
     std::ifstream f(fileName);
@@ -63,7 +70,7 @@ InputParser::Result InputParser::parse(const std::string& fileName)
         return {{},{},false};
     }
 
-    Result result {{},{},false};
+    Result result {{},{},true};
 
     while (std::getline(f, m_line))
     {
@@ -95,7 +102,6 @@ InputParser::Result InputParser::parse(const std::string& fileName)
         }
     }
 
-    result.isValid = true;
     return result;
 }
 
@@ -132,7 +138,7 @@ void InputParser::parseLineOfNumbers(std::vector<std::vector<int64_t>>& numbers)
     m_iss.clear();
 }
 
-void InputParser::parseLineOfOperations(std::vector<char>& operations,
+void InputParser::parseLineOfOperations(std::vector<MathOperation>& operations,
                                         const size_t rowLen)
 {
     m_iss.str(m_line);
@@ -140,9 +146,9 @@ void InputParser::parseLineOfOperations(std::vector<char>& operations,
     operations.reserve(rowLen);
 
     char inChar { '\0' };
-    while (m_iss >> inChar && (inChar == '*' || inChar == '+'))
+    while (m_iss >> inChar && (inChar == MULTIPLY || inChar == ADD))
     {
-        operations.push_back(inChar);
+        operations.push_back(MathOperation{inChar});
     }
 
     printIfVerbose(operations);
@@ -152,7 +158,7 @@ void InputParser::parseLineOfOperations(std::vector<char>& operations,
 
 // TODO: switch statement does not vectorize well
 int64_t doTheMath(const std::vector<std::vector<int64_t>>& numbers,
-                  const std::vector<char>& operations)
+                  const std::vector<MathOperation>& operations)
 {
     int64_t totalSum { 0 };
 
@@ -160,17 +166,17 @@ int64_t doTheMath(const std::vector<std::vector<int64_t>>& numbers,
     {
         int64_t equationResult { 0 };
 
-        if (operations[i] == '*')
+        if (operations[i] == MULTIPLY)
             equationResult = 1;
 
         for (size_t j = 0; j < numbers.size(); ++j)
         {
             switch(operations[i])
             {
-                case '*':
+                case MULTIPLY:
                     equationResult *= numbers[j][i];
                     break;
-                case '+':
+                case ADD:
                     equationResult += numbers[j][i];
                     break;
             }
@@ -189,6 +195,7 @@ int solve(const std::string& fileName, const bool verbose)
 
     if (!parsed.isValid)
     {
+        std::cerr << "Invalid input file contents! \n";
         return 1;
     }
 
@@ -223,7 +230,7 @@ int main(int argc, char* argv[])
 
     auto start = std::chrono::high_resolution_clock::now();
 
-    solve(fileName, verbose);
+    int returnCode = solve(fileName, verbose);
 
     auto stop = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
@@ -231,5 +238,5 @@ int main(int argc, char* argv[])
 
     std::cout << "Time taken: " << duration.count() << " μs \n";
 
-    return 0;
+    return returnCode;
 }
