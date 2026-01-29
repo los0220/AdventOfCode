@@ -63,19 +63,20 @@ int countBeamSplits(std::vector<std::string>& diagram)
         }
     }
 
+    std::cerr << "Couldn't find starting position! \n";
     return -1;
 }
 
 int solve(std::string const& fileName, const bool verbose)
 {
     std::ifstream f(fileName);
-    std::vector<std::string> diagram {};
-
     if (!f.is_open())
     {
         std::cerr << "Can't open " << fileName << "\n";
         return 1;
     }
+
+    std::vector<std::string> diagram {};
 
     std::string line {};
     while (std::getline(f, line))
@@ -87,9 +88,10 @@ int solve(std::string const& fileName, const bool verbose)
 
     f.close();
 
+    size_t expectedLineLen {diagram.begin()->size()};
     for (auto it = diagram.begin()+1; it != diagram.end(); ++it)
     {
-        if (diagram.begin()->size() != it->size())
+        if (it->size() != expectedLineLen)
         {
             std::cerr << "Line lenghts do not match! \n";
             return 1;
@@ -108,7 +110,7 @@ int solve(std::string const& fileName, const bool verbose)
 
     std::cout << result << "\n";
 
-    return 0;
+    return (result < 0) ? 1 : 0;
 }
 
 }  // namespace
@@ -136,7 +138,7 @@ int main(int argc, char* argv[])
 
     auto start = std::chrono::high_resolution_clock::now();
 
-    solve(fileName, verbose);
+    int result = solve(fileName, verbose);
 
     auto stop = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
@@ -144,5 +146,5 @@ int main(int argc, char* argv[])
 
     std::cout << "Time taken: " << duration.count() << " μs \n";
 
-    return 0;
+    return result;
 }

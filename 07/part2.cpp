@@ -3,6 +3,7 @@
 #include <fstream>
 #include <iostream>
 #include <map>
+#include <stack>
 #include <string>
 #include <vector>
 
@@ -38,7 +39,6 @@ int64_t runNextTimeline(std::vector<std::string>& diagram,
                         std::map<Point, int64_t>& visited, size_t y, size_t x)
 {
     int64_t timelineCount { 0 };
-    static size_t smallestY { diagram.size() };
 
     for (; y < diagram.size(); ++y)
     {
@@ -51,11 +51,6 @@ int64_t runNextTimeline(std::vector<std::string>& diagram,
                     timelineCount += runNextTimeline(diagram, visited, y, x-1);
                 if (x+1 < diagram[y].size())
                     timelineCount += runNextTimeline(diagram, visited, y, x+1);
-
-                if (smallestY > y)
-                {
-                    smallestY = y;
-                }
 
                 visited[Point{y,x}] = timelineCount;
                 diagram[y][x] = DiagramLegend::VISITED_SPLITER;
@@ -83,6 +78,7 @@ int64_t countTimelines(std::vector<std::string>& diagram)
         }
     }
 
+    std::cerr << "Couldn't find starting position! \n";
     return -1;
 }
 
@@ -126,7 +122,7 @@ int solve(const std::string& fileName, const bool verbose)
 
     std::cout << result << "\n";
 
-    return 0;
+    return (result < 0) ? 1 : 0;
 }
 
 }  // namespace
@@ -154,7 +150,7 @@ int main(int argc, char* argv[])
 
     auto start = std::chrono::high_resolution_clock::now();
 
-    solve(fileName, verbose);
+    int result = solve(fileName, verbose);
 
     auto stop = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
@@ -162,5 +158,5 @@ int main(int argc, char* argv[])
 
     std::cout << "Time taken: " << duration.count() << " μs \n";
 
-    return 0;
+    return result;
 }
