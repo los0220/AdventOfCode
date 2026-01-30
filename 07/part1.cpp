@@ -16,11 +16,14 @@ enum DiagramLegend : char
     BEAM = '|'
 };
 
-int runNextBeamSplit(std::vector<std::string>& diagram, size_t y, size_t x)
+// TODO: check if loop-based DFS is faster
+int countBeamSplits(std::vector<std::string>& diagram, const size_t startY,
+                    const size_t startX)
 {
     int splitCount { 0 };
+    size_t x { startX };
 
-    for (; y < diagram.size(); ++y)
+    for (size_t y = startY; y < diagram.size(); ++y)
     {
         switch (diagram[y][x])
         {
@@ -29,11 +32,11 @@ int runNextBeamSplit(std::vector<std::string>& diagram, size_t y, size_t x)
 
                 if (x > 0)
                 {
-                    splitCount += runNextBeamSplit(diagram, y, x-1);
+                    splitCount += countBeamSplits(diagram, y, x-1);
                 }
                 if (x+1 < diagram[y].size())
                 {
-                    splitCount += runNextBeamSplit(diagram, y, x+1);
+                    splitCount += countBeamSplits(diagram, y, x+1);
                 }
 
                 [[fallthrough]];
@@ -48,23 +51,26 @@ int runNextBeamSplit(std::vector<std::string>& diagram, size_t y, size_t x)
     return splitCount;
 }
 
-// TODO: can find starting position using std::string::find_first_of
-// or pass to the function from the file reading stage
-int countBeamSplits(std::vector<std::string>& diagram)
+bool isInputValid(const std::vector<std::string>& diagram, const size_t startY,
+                  const size_t startX)
 {
-    for (size_t startY = 0; startY < diagram.size(); ++startY)
+    if ((startX == std::string::npos) || (startY == std::string::npos))
     {
-        for (size_t startX = 0; startX < diagram[startY].size(); ++startX)
+        std::cerr << "Couldn't find starting position! \n";
+        return false;
+    }
+
+    size_t expectedLineLen {diagram.begin()->size()};
+    for (auto it = diagram.begin()+1; it != diagram.end(); ++it)
+    {
+        if (it->size() != expectedLineLen)
         {
-            if (diagram[startY][startX] == DiagramLegend::START)
-            {
-                return runNextBeamSplit(diagram, startY, startX);
-            }
+            std::cerr << "Line lenghts do not match! \n";
+            return false;
         }
     }
 
-    std::cerr << "Couldn't find starting position! \n";
-    return -1;
+    return true;
 }
 
 int solve(std::string const& fileName, const bool verbose)
@@ -77,28 +83,34 @@ int solve(std::string const& fileName, const bool verbose)
     }
 
     std::vector<std::string> diagram {};
+    size_t startX { std::string::npos };
+    size_t startY { std::string::npos };
 
     std::string line {};
     while (std::getline(f, line))
     {
-        // TODO: remove all empty lines - containing only '.'
-        // std::string::find_first_not_of()
+        size_t firstNotEmptyPos { line.find_first_not_of(DiagramLegend::EMPTY)};
+        if (firstNotEmptyPos == std::string::npos)
+        {
+            continue;
+        }
+        if (startX == std::string::npos)
+        {
+            startX = line.find_first_of(DiagramLegend::START);
+            startY = diagram.size();
+        }
+
         diagram.push_back(std::move(line));
     }
 
     f.close();
 
-    size_t expectedLineLen {diagram.begin()->size()};
-    for (auto it = diagram.begin()+1; it != diagram.end(); ++it)
+    if (!isInputValid(diagram, startY, startX))
     {
-        if (it->size() != expectedLineLen)
-        {
-            std::cerr << "Line lenghts do not match! \n";
-            return 1;
-        }
+        return 1;
     }
 
-    int result = countBeamSplits(diagram);
+    int result = countBeamSplits(diagram, startY, startX);
 
     if (verbose)
     {

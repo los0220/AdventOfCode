@@ -25,22 +25,19 @@ struct Point
 
     bool operator <(const Point& rhs) const
     {
-        if (y != rhs.y)
-        {
-            return y < rhs.y;
-        }
-
-        return x < rhs.x;
+        return y < rhs.y;
     }
 };
 
 // TODO: check if loop based DFS is faster
-int64_t runNextTimeline(std::vector<std::string>& diagram,
-                        std::map<Point, int64_t>& visited, size_t y, size_t x)
+int64_t countTimelines(std::vector<std::string>& diagram,
+                       std::map<Point, int64_t>& visited, const size_t startY,
+                       const size_t startX)
 {
     int64_t timelineCount { 0 };
+    size_t x { startX };
 
-    for (; y < diagram.size(); ++y)
+    for (size_t y = startY; y < diagram.size(); ++y)
     {
         switch (diagram[y][x])
         {
@@ -48,9 +45,13 @@ int64_t runNextTimeline(std::vector<std::string>& diagram,
                 return visited[Point{y,x}];
             case DiagramLegend::SPLITER:
                 if (x > 0)
-                    timelineCount += runNextTimeline(diagram, visited, y, x-1);
+                {
+                    timelineCount += countTimelines(diagram, visited, y, x-1);
+                }
                 if (x+1 < diagram[y].size())
-                    timelineCount += runNextTimeline(diagram, visited, y, x+1);
+                {
+                    timelineCount += countTimelines(diagram, visited, y, x+1);
+                }
 
                 visited[Point{y,x}] = timelineCount;
                 diagram[y][x] = DiagramLegend::VISITED_SPLITER;
@@ -61,58 +62,67 @@ int64_t runNextTimeline(std::vector<std::string>& diagram,
     return 1;
 }
 
-// TODO: can find starting position using std::string::find_first_of
-// or pass to the function from the file reading stage
-int64_t countTimelines(std::vector<std::string>& diagram)
+bool isInputValid(const std::vector<std::string>& diagram, const size_t startY,
+                  const size_t startX)
 {
-    std::map<Point, int64_t> visited {};
-
-    for (size_t startY = 0; startY < diagram.size(); ++startY)
+    if ((startY == std::string::npos) || (startX == std::string::npos))
     {
-        for (size_t startX = 0; startX < diagram[startY].size(); ++startX)
+        std::cerr << "Couldn't find starting position! \n";
+        return false;
+    }
+
+    size_t expectedLineLen {diagram.begin()->size()};
+    for (auto it = diagram.begin()+1; it != diagram.end(); ++it)
+    {
+        if (it->size() != expectedLineLen)
         {
-            if (diagram[startY][startX] == DiagramLegend::START)
-            {
-                return runNextTimeline(diagram, visited, startY, startX);
-            }
+            std::cerr << "Line lenghts do not match! \n";
+            return false;
         }
     }
 
-    std::cerr << "Couldn't find starting position! \n";
-    return -1;
+    return true;
 }
 
 int solve(const std::string& fileName, const bool verbose)
 {
     std::ifstream f(fileName);
-    std::vector<std::string> diagram {};
-
     if (!f.is_open())
     {
         std::cerr << "Can't open " << fileName << "\n";
-        return -1;
+        return 1;
     }
+
+    std::vector<std::string> diagram {};
+    size_t startX { std::string::npos };
+    size_t startY { std::string::npos };
 
     std::string line {};
     while (std::getline(f, line))
     {
-        // TODO: remove all empty lines - containing only '.'
-        // std::string::find_first_not_of()
+        size_t firstNotEmptyPos { line.find_first_not_of(DiagramLegend::EMPTY)};
+        if (firstNotEmptyPos == std::string::npos)
+        {
+            continue;
+        }
+        if (startX == std::string::npos)
+        {
+            startX = line.find_first_of(DiagramLegend::START);
+            startY = diagram.size();
+        }
+
         diagram.push_back(std::move(line));
     }
 
     f.close();
 
-    for (auto it = diagram.begin()+1; it != diagram.end(); ++it)
+    if (!isInputValid(diagram, startY, startX))
     {
-        if (diagram.begin()->size() != it->size())
-        {
-            std::cerr << "Line lenghts do not match! \n";
-            return 1;
-        }
+        return 1;
     }
 
-    int64_t result = countTimelines(diagram);
+    std::map<Point, int64_t> visited {};
+    int64_t result = countTimelines(diagram, visited, startY, startX);
 
     if (verbose)
     {
